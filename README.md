@@ -1,3 +1,8 @@
+This repository contains my solutions for the CTF.
+
+
+---
+
 # Oak Security CosmWasm CTF ⛳️
 
 Crack all our challenges and show the community that you know your way in security, either as an auditor or a security-minded developer! This CTF was run as a live event during AwesomWasm 2023, for info related to the event check [this other file](./awesomwasm-2023/README.md). 
